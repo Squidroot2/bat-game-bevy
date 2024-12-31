@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-
+/// Asset path
 const PLAYER_SPRITE_PATH: &str = "sprites/nf_batFlightStrip.png";
 const PLAYER_SPRITE_SIZE: UVec2 = UVec2::splat(64);
 const PLAYER_SPRITE_GRID: UVec2 = UVec2 { x: 8, y: 1 };
