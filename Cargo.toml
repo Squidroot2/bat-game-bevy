@@ -1,6 +1,6 @@
 [package]
 name = "bat-game-bevy"
-version = "0.1.0"
+version = "0.1.0-dev"
 edition = "2021"
 description = "Bat Game written with the bevy game engine"
 repository = "https://github.com/Squidroot2/bat-game-bevy"
@@ -22,4 +22,4 @@ opt-level = 1
 opt-level = 3
 
 [dependencies]
-bevy = "0.15.0"
+bevy = { version = "0.15.0", features= ["wayland"] }
