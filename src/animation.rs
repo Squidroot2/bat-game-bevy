@@ -2,8 +2,6 @@ use std::time::Duration;
 
 use bevy::prelude::*;
 
-use crate::physics::Velocity;
-
 #[derive(Component)]
 pub struct AnimationTimer {
     frames: u32,
