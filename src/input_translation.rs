@@ -1,13 +1,11 @@
-use bevy::{
-    input::{gamepad::GamepadEvent, keyboard::KeyboardInput},
-    prelude::*,
-};
+use bevy::{input::InputSystem, prelude::*};
 
 #[derive(Event, PartialEq, Eq)]
-pub enum UserInput {
+pub enum GameInput {
     Start,
     Flap,
     Screetch,
+    Reset,
 }
 
 #[derive(Resource, Default)]
@@ -31,8 +29,12 @@ impl DirectionalInput {
         self.raw = 0.0
     }
 }
-pub struct InputPlugin;
-impl Plugin for InputPlugin {
+
+#[derive(SystemSet, Clone, Eq, PartialEq, Debug, Hash)]
+struct InputTranslationSystem;
+
+pub struct InputTranslationPlugin;
+impl Plugin for InputTranslationPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             PreUpdate,
@@ -42,11 +44,13 @@ impl Plugin for InputPlugin {
                 get_keyboard_direction,
                 get_gamepad_direction,
                 process_mouse,
-            ),
+            )
+                .in_set(InputTranslationSystem),
         );
         app.add_systems(PostUpdate, reset_direction);
-        app.add_event::<UserInput>();
+        app.add_event::<GameInput>();
         app.init_resource::<DirectionalInput>();
+        app.configure_sets(PreUpdate, InputTranslationSystem.after(InputSystem));
     }
 }
 
@@ -59,17 +63,18 @@ fn get_keyboard_direction(keys: Res<ButtonInput<KeyCode>>, mut direction: ResMut
     }
 }
 
-fn process_keyboard_events(mut writer: EventWriter<UserInput>, mut input_reader: EventReader<KeyboardInput>) {
-    for input in input_reader.read() {
-        if !input.state.is_pressed() {
-            continue;
-        }
-        match input.key_code {
-            KeyCode::Escape => writer.send(UserInput::Start),
-            KeyCode::Space => writer.send(UserInput::Flap),
-            KeyCode::ControlLeft => writer.send(UserInput::Screetch),
-            _ => continue,
-        };
+fn process_keyboard_events(mut writer: EventWriter<GameInput>, keys: Res<ButtonInput<KeyCode>>) {
+    if keys.just_pressed(KeyCode::Escape) {
+        writer.send(GameInput::Start);
+    }
+    if keys.just_pressed(KeyCode::Space) {
+        writer.send(GameInput::Flap);
+    }
+    if keys.just_pressed(KeyCode::ControlLeft) {
+        writer.send(GameInput::Screetch);
+    }
+    if keys.just_pressed(KeyCode::KeyR) {
+        writer.send(GameInput::Reset);
     }
 }
 const GAMEPAD_DEADZONE: f32 = 0.08;
@@ -82,18 +87,19 @@ fn get_gamepad_direction(gamepads: Query<&Gamepad>, mut direction: ResMut<Direct
     }
 }
 
-fn process_gamepad_events(mut writer: EventWriter<UserInput>, mut input_reader: EventReader<GamepadEvent>) {
-    for input in input_reader.read() {
-        if let GamepadEvent::Button(button_event) = input {
-            if !button_event.state.is_pressed() {
-                continue;
-            }
-            match button_event.button {
-                GamepadButton::Start => writer.send(UserInput::Start),
-                GamepadButton::South => writer.send(UserInput::Flap),
-                GamepadButton::West => writer.send(UserInput::Screetch),
-                _ => continue,
-            };
+fn process_gamepad_events(mut writer: EventWriter<GameInput>, gamepads: Query<&Gamepad>) {
+    for gamepad in gamepads.iter() {
+        if gamepad.just_pressed(GamepadButton::Start) {
+            writer.send(GameInput::Start);
+        }
+        if gamepad.just_pressed(GamepadButton::South) {
+            writer.send(GameInput::Flap);
+        }
+        if gamepad.just_pressed(GamepadButton::West) {
+            writer.send(GameInput::Screetch);
+        }
+        if gamepad.just_pressed(GamepadButton::Select) {
+            writer.send(GameInput::Reset);
         }
     }
 }

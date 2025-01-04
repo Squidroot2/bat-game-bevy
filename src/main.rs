@@ -2,18 +2,19 @@ use bevy::prelude::*;
 use bevy::window::WindowMode;
 use constants::WINDOW_DIMENSIONS;
 use game::GamePlugin;
-use input::InputPlugin;
+use input_translation::InputTranslationPlugin;
 
 use crate::background::BackgroundPlugin;
 use crate::camera::CameraPlugin;
 use crate::constants::GAME_NAME;
-use crate::player::PlayerPlugin;
 
+mod animation;
 mod background;
 mod camera;
 mod constants;
 mod game;
-mod input;
+mod input_translation;
+mod physics;
 mod player;
 
 #[derive(States, Clone, Copy, Eq, PartialEq, Hash, Debug)]
@@ -45,7 +46,7 @@ fn main() {
         ..default()
     }));
     // My Plugins
-    app.add_plugins((PlayerPlugin, CameraPlugin, BackgroundPlugin, GamePlugin, InputPlugin));
+    app.add_plugins((CameraPlugin, BackgroundPlugin, GamePlugin, InputTranslationPlugin));
     app.insert_state(GameState::Paused);
     app.insert_resource(Time::<Fixed>::from_hz(96.0));
     app.run();

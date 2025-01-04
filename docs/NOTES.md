@@ -10,7 +10,7 @@
     - [x] Set Window to 1280x800, non-Resizeable
     - [x] Set Window to Fullsceen on Release, Windowed on on Debug
 - [x] Background
-- [ ] Flap Animation
+- [x] Flap Animation
 - [ ] World Darkens as time progresses
 
 ### Gameplay
@@ -23,8 +23,10 @@
     - [x] Gravity
     - [x] Vertical Flapping
     - [x] Horizontal Movement
-    - [ ] Tune movement so it feels just right
+    - [x] Tune movement so it feels just right
+    - [ ] Extra Gravity to bring bat down from above screen
 - [x] Pause
+- [ ] Reset
 - [ ] Game Over when Bat hits bottom
 - [ ] Enemies Spawn
 - [ ] Enemies Despawn when hit
