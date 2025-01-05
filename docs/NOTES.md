@@ -17,8 +17,9 @@
 - [ ] Receive Inputs
     - [x] Controller
     - [x] Keyboard
-    - [ ] Mouse
-    - [ ] Exclude Input when Window not focused
+    - [x] Mouse
+    - [x] Exclude Input when Window not focused
+    - [ ] Menu Inputs
 - [x] Bat Movement
     - [x] Gravity
     - [x] Vertical Flapping
@@ -26,7 +27,7 @@
     - [x] Tune movement so it feels just right
     - [ ] Extra Gravity to bring bat down from above screen
 - [x] Pause
-- [ ] Reset
+- [x] Reset
 - [ ] Game Over when Bat hits bottom
 - [ ] Enemies Spawn
 - [ ] Enemies Despawn when hit
@@ -35,23 +36,26 @@
 
 ### UI
 - [ ] Score Displayed on screen
-- [ ] Main Menu
-    - [ ] Start Button
-    - [ ] Settings Button (Opens Settings Menu)
-        - [ ] Resolution Setting
-        - [ ] Controls Setting (Auto, Keyboard, M+K, Gamepad)
-    - [ ] Quit Button
+- [ ] Prompt to Start game
+- [ ] Pause Menu
+    - [ ] Continue 
+    - [ ] Restart
+    - [ ] Quit
 
 ### Sound
-- [ ] Flap Noise
+- [x] Flap Noise
 - [ ] Crunch sound when enemies eaten
-- [ ] Screecth Noise 
+- [x] Screecth Noise 
 
 ### Development
 - [x] Create basic github workflow
 - [ ] Automated Tests
+    - [ ] Test Asset Loading
 - [ ] Logging
 - [ ] Add Diagnostics
+
+### Issues
+- [ ] PowerA Controller thnks "Y" is West
 
 ## Enemy ideas
 - Firefly

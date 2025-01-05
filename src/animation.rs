@@ -33,6 +33,13 @@ impl AnimationTimer {
         self.current_frame = 0;
     }
 
+    /// Resets and stops the animation
+    pub fn stop(&mut self) {
+        self.timer.reset();
+        self.timer.pause();
+        self.current_frame = 0;
+    }
+
     fn get_current_frame(&mut self, tick: Duration) -> u32 {
         self.timer.tick(tick);
         self.current_frame += self.timer.times_finished_this_tick();

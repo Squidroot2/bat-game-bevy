@@ -2,16 +2,34 @@ use bevy::prelude::*;
 
 use crate::{
     animation::{animate_sprites, direct_sprites},
-    input_translation::GameInput,
+    audio::SoundEffectSystem,
+    input_translation::{GameInput, InputTranslationSystem},
+    pause_menu::PausedState,
     physics::{add_friction, add_gravity, move_with_velocity, wrap_position},
-    player::{handle_input, spawn_player},
+    player::{handle_input, reset_player, spawn_player, PlayerFlapped, PlayerScreetched},
     GameState,
 };
+
+#[derive(Event, Default)]
+pub struct Reset;
+
+#[derive(Event)]
+pub struct EnemyEaten;
+
+#[derive(SystemSet, Clone, Eq, PartialEq, Debug, Hash)]
+pub struct GameplaySystem;
 
 pub struct GamePlugin;
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(FixedUpdate, check_pause);
+        app.add_event::<Reset>();
+        app.add_event::<PlayerFlapped>();
+        app.add_event::<PlayerScreetched>();
+        app.add_event::<EnemyEaten>();
+        app.add_systems(
+            PreUpdate,
+            check_game_start.after(InputTranslationSystem).run_if(in_state(GameState::Ready)),
+        );
         app.add_systems(Startup, spawn_player);
         app.add_systems(
             Update,
@@ -24,21 +42,20 @@ impl Plugin for GamePlugin {
                 add_friction.after(move_with_velocity),
                 wrap_position.after(move_with_velocity),
             )
-                .run_if(in_state(GameState::Playing)),
+                .in_set(GameplaySystem)
+                .run_if(in_state(GameState::Playing))
+                .run_if(in_state(PausedState::Unpaused)),
         );
+        app.add_systems(Update, reset_player);
+        app.configure_sets(Update, GameplaySystem.before(SoundEffectSystem));
     }
 }
 
-fn check_pause(mut reader: EventReader<GameInput>, state: Res<State<GameState>>, mut next_state: ResMut<NextState<GameState>>) {
-    for input in reader.read() {
-        if *input == GameInput::Start {
-            match state.get() {
-                GameState::Playing => next_state.set(GameState::Paused),
-                GameState::Paused => next_state.set(GameState::Playing),
-            }
-        }
-        if *input == GameInput::Flap && *state.get() == GameState::Paused {
-            next_state.set(GameState::Playing)
+fn check_game_start(mut input_reader: EventReader<GameInput>, mut next_state: ResMut<NextState<GameState>>) {
+    for input in input_reader.read() {
+        match input {
+            GameInput::Screetch | GameInput::Flap => next_state.set(GameState::Playing),
+            GameInput::Start => continue,
         }
     }
 }

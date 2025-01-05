@@ -1,25 +1,30 @@
 use bevy::prelude::*;
 use bevy::window::WindowMode;
-use constants::WINDOW_DIMENSIONS;
-use game::GamePlugin;
-use input_translation::InputTranslationPlugin;
+use pause_menu::PauseMenuPlugin;
 
+use crate::audio::SoundPlugin;
 use crate::background::BackgroundPlugin;
 use crate::camera::CameraPlugin;
 use crate::constants::GAME_NAME;
+use crate::constants::WINDOW_DIMENSIONS;
+use crate::game::GamePlugin;
+use crate::input_translation::InputTranslationPlugin;
 
 mod animation;
+mod audio;
 mod background;
 mod camera;
 mod constants;
 mod game;
 mod input_translation;
+mod pause_menu;
 mod physics;
 mod player;
 
 #[derive(States, Clone, Copy, Eq, PartialEq, Hash, Debug)]
 enum GameState {
-    Paused,
+    Ready,
+    Gameover,
     Playing,
 }
 
@@ -40,14 +45,20 @@ fn main() {
         mode: window_mode,
         ..default()
     };
-    // Set default_nearewast to prevent blurry sprits
+    // Set default_nearest to prevent blurry sprits
     app.add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest()).set(WindowPlugin {
         primary_window: Some(window),
         ..default()
     }));
     // My Plugins
-    app.add_plugins((CameraPlugin, BackgroundPlugin, GamePlugin, InputTranslationPlugin));
-    app.insert_state(GameState::Paused);
-    app.insert_resource(Time::<Fixed>::from_hz(96.0));
+    app.add_plugins((
+        CameraPlugin,
+        BackgroundPlugin,
+        GamePlugin,
+        InputTranslationPlugin,
+        SoundPlugin,
+        PauseMenuPlugin,
+    ));
+    app.insert_state(GameState::Ready);
     app.run();
 }

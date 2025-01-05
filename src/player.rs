@@ -2,6 +2,7 @@ use bevy::prelude::*;
 
 use crate::{
     animation::{AnimationTimer, Direction},
+    game::Reset,
     input_translation::{DirectionalInput, GameInput},
     physics::{Friction, Gravity, Velocity, WrappingMovement},
 };
@@ -15,6 +16,12 @@ const HORIZONTAL_ACCELERATION: f32 = 750.0;
 const MAX_HORIZONTAL_SPEED: f32 = 1000.0;
 const FLAP_VERTICAL_STRENGTH: f32 = 500.0;
 const FLAP_HORIZONTAL_STRENGTH: f32 = 400.0;
+
+#[derive(Event, Default)]
+pub struct PlayerFlapped;
+
+#[derive(Event, Default)]
+pub struct PlayerScreetched;
 
 #[derive(Component)]
 #[require(
@@ -49,9 +56,31 @@ fn player_animation_timer() -> AnimationTimer {
     AnimationTimer::new(frames, ANIMATION_SECS)
 }
 
+/// Resets a player to their original position, velocity, and animation frame
+pub fn reset_player(
+    mut reader: EventReader<Reset>,
+    query: Single<(&mut Transform, &mut Sprite, &mut AnimationTimer, &mut Velocity), With<Player>>,
+) {
+    if !reader.is_empty() {
+        let (mut transform, mut sprite, mut animation_timer, mut velocity) = query.into_inner();
+        transform.translation = Vec3::ZERO;
+        // Intentionally not flipping x sprite based on direction
+        match sprite.texture_atlas.as_mut() {
+            Some(atlas) => atlas.index = 0,
+            None => error!("Player sprite missing texture atlas"),
+        }
+        animation_timer.stop();
+        **velocity = Vec2::ZERO;
+
+        reader.clear();
+    }
+}
+
 //TODO determine if "Direction" is needless abstraction (It probably is tbh)
 pub fn handle_input(
     mut reader: EventReader<GameInput>,
+    mut screetch_writer: EventWriter<PlayerScreetched>,
+    mut flap_writer: EventWriter<PlayerFlapped>,
     direction_input: Res<DirectionalInput>,
     time: Res<Time>,
     query: Single<(&mut Velocity, &mut AnimationTimer, &mut Direction), With<Player>>,
@@ -68,10 +97,17 @@ pub fn handle_input(
     velocity.x += direction * HORIZONTAL_ACCELERATION * time.delta_secs();
     velocity.x = velocity.x.clamp(-MAX_HORIZONTAL_SPEED, MAX_HORIZONTAL_SPEED);
     for input in reader.read() {
-        if matches!(input, GameInput::Flap) {
-            velocity.y += FLAP_VERTICAL_STRENGTH;
-            velocity.x += direction * FLAP_HORIZONTAL_STRENGTH;
-            animation_timer.start();
+        match input {
+            GameInput::Flap => {
+                velocity.y += FLAP_VERTICAL_STRENGTH;
+                velocity.x += direction * FLAP_HORIZONTAL_STRENGTH;
+                animation_timer.start();
+                flap_writer.send_default();
+            }
+            GameInput::Screetch => {
+                screetch_writer.send_default();
+            }
+            _ => continue,
         }
     }
 }
