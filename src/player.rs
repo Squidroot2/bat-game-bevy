@@ -2,7 +2,9 @@ use bevy::prelude::*;
 
 use crate::{
     animation::{AnimationTimer, Direction},
+    constants::WINDOW_BOTTOM,
     game::Reset,
+    game_over::{GameOver, GameOverReason},
     input_translation::{DirectionalInput, GameInput},
     physics::{Friction, Gravity, Velocity, WrappingMovement},
 };
@@ -73,6 +75,13 @@ pub fn reset_player(
         **velocity = Vec2::ZERO;
 
         reader.clear();
+    }
+}
+
+pub fn check_player_crashed(mut writer: EventWriter<GameOver>, query: Single<&Transform, With<Player>>) {
+    let transform = query.into_inner();
+    if transform.translation.y < WINDOW_BOTTOM {
+        writer.send(GameOver::new(GameOverReason::Crashed));
     }
 }
 

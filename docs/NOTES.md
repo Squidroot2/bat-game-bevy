@@ -55,7 +55,8 @@
 - [ ] Add Diagnostics
 
 ### Issues
-- [ ] PowerA Controller thnks "Y" is West
+- [x] PowerA Controller thnks "Y" is West
+    (resolved via environment variable. Will eventually be fixed with update to gilrs
 
 ## Enemy ideas
 - Firefly

@@ -1,6 +1,8 @@
 use bevy::prelude::*;
 use bevy::window::WindowMode;
+use game_over::GameOverPlugin;
 use pause_menu::PauseMenuPlugin;
+use pause_menu::PausedState;
 
 use crate::audio::SoundPlugin;
 use crate::background::BackgroundPlugin;
@@ -16,16 +18,32 @@ mod background;
 mod camera;
 mod constants;
 mod game;
+mod game_over;
 mod input_translation;
 mod pause_menu;
 mod physics;
 mod player;
+mod ui;
 
 #[derive(States, Clone, Copy, Eq, PartialEq, Hash, Debug)]
 enum GameState {
     Ready,
     Gameover,
     Playing,
+}
+
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
+struct InMenu;
+
+impl ComputedStates for InMenu {
+    type SourceStates = PausedState;
+
+    fn compute(sources: PausedState) -> Option<Self> {
+        match sources {
+            PausedState::Unpaused => None,
+            PausedState::Paused => Some(InMenu),
+        }
+    }
 }
 
 fn main() {
@@ -58,6 +76,7 @@ fn main() {
         InputTranslationPlugin,
         SoundPlugin,
         PauseMenuPlugin,
+        GameOverPlugin,
     ));
     app.insert_state(GameState::Ready);
     app.run();

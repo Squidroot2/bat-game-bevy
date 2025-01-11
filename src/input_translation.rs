@@ -1,5 +1,7 @@
 use bevy::{input::InputSystem, prelude::*, window::PrimaryWindow};
 
+use crate::GameState;
+
 #[derive(Event, PartialEq, Eq)]
 pub enum GameInput {
     Start,
@@ -42,6 +44,12 @@ impl DirectionalInput {
 #[derive(SystemSet, Clone, Eq, PartialEq, Debug, Hash)]
 pub struct InputTranslationSystem;
 
+#[derive(SystemSet, Clone, Eq, PartialEq, Debug, Hash)]
+struct GameInputSystem;
+
+#[derive(SystemSet, Clone, Eq, PartialEq, Debug, Hash)]
+struct MenuInputSystem;
+
 pub struct InputTranslationPlugin;
 impl Plugin for InputTranslationPlugin {
     fn build(&self, app: &mut App) {
@@ -54,13 +62,33 @@ impl Plugin for InputTranslationPlugin {
                 get_gamepad_direction,
                 process_mouse_game_input,
             )
-                .in_set(InputTranslationSystem),
+                .in_set(GameInputSystem),
+        );
+        app.add_systems(
+            PreUpdate,
+            (process_key_menu_input, process_gamepad_menu_input).in_set(MenuInputSystem),
         );
         app.add_systems(PostUpdate, reset_direction);
         app.add_event::<GameInput>();
+        app.add_event::<MenuInput>();
         app.init_resource::<DirectionalInput>();
+        app.configure_sets(PreUpdate, MenuInputSystem.run_if(in_menu));
+        app.configure_sets(PreUpdate, GameInputSystem.run_if(not_in_menu));
+        app.configure_sets(PreUpdate, (MenuInputSystem, GameInputSystem).in_set(InputTranslationSystem));
         app.configure_sets(PreUpdate, InputTranslationSystem.run_if(window_in_focus).after(InputSystem));
     }
+}
+
+fn in_menu(game_state: Res<State<GameState>>) -> bool {
+    match game_state.get() {
+        GameState::Gameover => true,
+        _ => false,
+    }
+    //TODO Also check paused state
+}
+
+fn not_in_menu(game_state: Res<State<GameState>>) -> bool {
+    !in_menu(game_state)
 }
 
 fn window_in_focus(window: Single<&Window, With<PrimaryWindow>>) -> bool {
@@ -88,13 +116,17 @@ fn process_key_game_input(mut writer: EventWriter<GameInput>, keys: Res<ButtonIn
         writer.send(GameInput::Screetch);
     }
 }
-const GAMEPAD_DEADZONE: f32 = 0.08;
+
+fn process_key_menu_input(mut writer: EventWriter<MenuInput>, keys: Res<ButtonInput<KeyCode>>) {
+    if keys.just_pressed(KeyCode::Enter) {
+        writer.send(MenuInput::Accept);
+    }
+    //TODO rest of inputs
+}
 fn get_gamepad_direction(gamepads: Query<&Gamepad>, mut direction: ResMut<DirectionalInput>) {
     for gamepad in gamepads.iter() {
         let input_direction = gamepad.left_stick().x;
-        if input_direction.abs() > GAMEPAD_DEADZONE {
-            direction.add_value(input_direction);
-        }
+        direction.add_value(input_direction);
     }
 }
 
@@ -110,6 +142,14 @@ fn process_gamepad_game_input(mut writer: EventWriter<GameInput>, gamepads: Quer
             println!("West");
             writer.send(GameInput::Screetch);
         }
+    }
+}
+fn process_gamepad_menu_input(mut writer: EventWriter<MenuInput>, gamepads: Query<&Gamepad>) {
+    for gamepad in gamepads.iter() {
+        if gamepad.just_pressed(GamepadButton::South) {
+            writer.send(MenuInput::Accept);
+        }
+        //TODO Rest of inputs
     }
 }
 fn process_mouse_game_input(mut writer: EventWriter<GameInput>, mouse_buttons: Res<ButtonInput<MouseButton>>) {

@@ -6,11 +6,11 @@ use crate::{
     input_translation::{GameInput, InputTranslationSystem},
     pause_menu::PausedState,
     physics::{add_friction, add_gravity, move_with_velocity, wrap_position},
-    player::{handle_input, reset_player, spawn_player, PlayerFlapped, PlayerScreetched},
+    player::{check_player_crashed, handle_input, reset_player, spawn_player, PlayerFlapped, PlayerScreetched},
     GameState,
 };
 
-#[derive(Event, Default)]
+#[derive(Event, Default, Clone)]
 pub struct Reset;
 
 #[derive(Event)]
@@ -18,6 +18,10 @@ pub struct EnemyEaten;
 
 #[derive(SystemSet, Clone, Eq, PartialEq, Debug, Hash)]
 pub struct GameplaySystem;
+
+/// Systems that send the Gameover Event
+#[derive(SystemSet, Clone, Eq, PartialEq, Debug, Hash)]
+pub struct GameoverTriggersSubSystem;
 
 pub struct GamePlugin;
 impl Plugin for GamePlugin {
@@ -41,6 +45,7 @@ impl Plugin for GamePlugin {
                 move_with_velocity,
                 add_friction.after(move_with_velocity),
                 wrap_position.after(move_with_velocity),
+                check_player_crashed.after(move_with_velocity).in_set(GameoverTriggersSubSystem),
             )
                 .in_set(GameplaySystem)
                 .run_if(in_state(GameState::Playing))
@@ -58,4 +63,8 @@ fn check_game_start(mut input_reader: EventReader<GameInput>, mut next_state: Re
             GameInput::Start => continue,
         }
     }
+}
+
+fn reset_game() {
+    //TODO Reset score, despawn enemies, etc.
 }
